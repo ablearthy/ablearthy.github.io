@@ -20,7 +20,8 @@
             });
         }
         function render(divId, ownerId, postId, hash) {
-	        window.VK && VK.Widgets && VK.Widgets.Post && VK.Widgets.Post(divId, ownerId, postId, hash, {width: window.innerWidth / 2}) || setTimeout(render, Math.random() * 1000, divId, ownerId, postId, hash);
+            const width = (window.innerWidth < 768) ? window.innerWidth : ((window.innerWidth > 1080) ? window.innerWidth / 2: window.innerWidth * -0.15 + 886);
+            window.VK && VK.Widgets && VK.Widgets.Post && VK.Widgets.Post(divId, ownerId, postId, hash, {width: width}) || setTimeout(render, Math.random() * 1000, divId, ownerId, postId, hash);
         }
         function root() {
             return {
@@ -106,6 +107,7 @@
 <style>
     .options {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
     }
