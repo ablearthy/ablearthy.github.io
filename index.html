@@ -37,9 +37,10 @@
                 },
                 onInit: function() {
                     fetch("/data.json").then(r => r.json()).then(r => this.data = r);
-                    this.fetch(this.themeId, this.mType);
+                    this.fetch();
                 },
                 fetch: function() {
+                    console.log(this.data);
                     var posts = this.data[this.themeId][this.mType];
                     var root = document.getElementById("posts");
                     for (var post of posts.slice(this.position, this.position + 10)) {
