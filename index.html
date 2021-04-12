@@ -36,7 +36,7 @@
                     this.fetch(this.themeId, this.mType);
                 },
                 onInit: function() {
-                    fetch("/data.json").then(r => r.json()).then(r => this.data = r);
+                    this.data = await fetch("/data.json").then(r => r.json());
                     this.fetch();
                 },
                 fetch: function() {
