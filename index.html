@@ -1,123 +1,203 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <script src="https://vk.com/js/api/openapi.js?168"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular posts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        if( typeof Element.prototype.clearChildren === 'undefined' ) {
-            Object.defineProperty(Element.prototype, 'clearChildren', {
-              configurable: true,
-              enumerable: false,
-              value: function() {
-                while(this.firstChild) this.removeChild(this.lastChild);
-              }
-            });
+        function generatePostUrl(owner_id, post_id) {
+            return `https://vk.com/wall${owner_id}_${post_id}`;
         }
-        function render(divId, ownerId, postId, hash) {
-            const width = (window.innerWidth < 768) ? window.innerWidth : ((window.innerWidth > 1080) ? window.innerWidth / 2: window.innerWidth * -0.15 + 886);
-            window.VK && VK.Widgets && VK.Widgets.Post && VK.Widgets.Post(divId, ownerId, postId, hash, {width: width}) || setTimeout(render, Math.random() * 1000, divId, ownerId, postId, hash);
+        function generatePostTitle(author_name, content) {
+            return `${author_name}: ${content}`;
         }
         function root() {
             return {
-                themeId: 0,
-                mType: "most_liked",
+                posts: [],
+                themeId: '0',
                 data: {},
-                position: 0,
-                onChange: function () {
-                    console.log('change', this.themeId, this.mType);
-                    this.position = 0;
-                    var root = document.getElementById("posts");
-                    root.clearChildren();
-                    this.fetch(this.themeId, this.mType);
+                mType: "most_liked",
+                onThemeIdChange: function () {
+                    this.updatePosts();
                 },
-                onInit: function() {
-                    fetch("/data.json").then(r => r.json()).then(r => {this.data = r; this.fetch();});
+                changeCategory: function (name) {
+                    this.mType = name;
+                    this.updatePosts();
                 },
-                fetch: function() {
-                    console.log(this.data);
-                    var posts = this.data[this.themeId][this.mType];
-                    var root = document.getElementById("posts");
-                    for (var post of posts.slice(this.position, this.position + 10)) {
-                        var d = post.split('|');
-                        var ownerId = parseInt(d[0]);
-                        var postId = parseInt(d[1]);
-                        var postHash = d[2];
-                        var el = document.createElement("div");
-                        el.id = `vk_post_${ownerId}_${postId}`;
-                        el.classList.toggle('vk_post');
-                        root.appendChild(el);
-                        render(el.id, ownerId, postId, postHash);
-                    }
-                }
+                updatePosts: function () {
+                    this.posts = this.data[this.themeId][this.mType];
+                },
+                onInit: function () {
+                    fetch("/data.json")
+                        .then(r => r.json())
+                        .then(r => { this.data = r; this.updatePosts(); });
+                },
             }
         }
     </script>
 </head>
-<body >
-    <div id="root" x-data="root()" x-init="onInit()" @scroll.window="if (Math.abs(window.pageYOffset + window.innerHeight - document.body.scrollHeight) < 300 ) {position += 10; fetch();}">
-        <div class="options" >
-            <select name="theme" id="theme" x-model="themeId" @change="onChange()">
-                <option value="0">Все</option>
-                <option value="2271">Авто, мото</option>
-                <option value="2137">Бытовые услуги</option>
-                <option value="2003">Города, страны</option>
-                <option value="2005">Дом, ремонт</option>
-                <option value="2274">Животные</option>
-                <option value="2140">Интернет</option>
-                <option value="2136">Красота, здоровье</option>
-                <option value="2002">Кулинария, рецепты</option>
-                <option value="2127">Культура, искусство</option>
-                <option value="2273">Медицина</option>
-                <option value="2009">Музыка</option>
-                <option value="2129">Образование</option>
-                <option value="2012">Отношения, семья</option>
-                <option value="2131">Персона</option>
-                <option value="2013">Поиск работы</option>
-                <option value="2133">Профессиональные услуги</option>
-                <option value="2134">Развлечения</option>
-                <option value="2135">Рестораны</option>
-                <option value="2126">СМИ</option>
-                <option value="2130">Социальные и общественные организации</option>
-                <option value="2144">Спорт</option>
-                <option value="2132">Товары, магазины</option>
-                <option value="2138">Транспортные услуги</option>
-                <option value="2143">Туризм и отдых</option>
-                <option value="2008">Увлечения и хобби</option>
-                <option value="2141">Услуги связи</option>
-                <option value="2142">Финансы и страхование</option>
-                <option value="3268">Эротика</option>
-            </select>
-            <select name="growth_type" id="growth_type" x-model="mType" @change="onChange()">
-                <option value="most_liked">🔝 Лайки</option>
-                <option value="most_viewed">🔝 Просмотры</option>
-                <option value="growth_views">📈 Просмотры</option>
-                <option value="growth_likes">📈 Лайки</option>
-            </select>
-        </div>
-        <div id="posts">
-        </div>
+
+<body>
+    <div id="container" x-data="root" x-init="onInit">
+        <header>
+            <span><a href="#" @click="changeCategory('most_liked')"><i class="fa-solid fa-angles-up"></i> most
+                    likes</a></span>
+            |
+            <span><a href="#" @click="changeCategory('most_viewed')"><i class="fa-solid fa-angles-up"></i> most
+                    views</a></span>
+            |
+            <span><a href="#" @click="changeCategory('rising_likes')"><i class="fa-solid fa-arrow-trend-up"></i> rising
+                    likes</a></span>
+            |
+            <span><a href="#" @click="changeCategory('rising_views')"><i class="fa-solid fa-arrow-trend-up"></i> rising
+                    views</a></span>
+
+        </header>
+        <main>
+            <span class="options">
+                <select name="theme" id="theme" x-model="themeId" @change="onThemeIdChange()">
+                    <option value="0">Все</option>
+                    <option value="2271">Авто, мото</option>
+                    <option value="2137">Бытовые услуги</option>
+                    <option value="2003">Города, страны</option>
+                    <option value="2005">Дом, ремонт</option>
+                    <option value="2274">Животные</option>
+                    <option value="2140">Интернет</option>
+                    <option value="2136">Красота, здоровье</option>
+                    <option value="2002">Кулинария, рецепты</option>
+                    <option value="2127">Культура, искусство</option>
+                    <option value="2273">Медицина</option>
+                    <option value="2009">Музыка</option>
+                    <option value="2129">Образование</option>
+                    <option value="2012">Отношения, семья</option>
+                    <option value="2131">Персона</option>
+                    <option value="2013">Поиск работы</option>
+                    <option value="2133">Профессиональные услуги</option>
+                    <option value="2134">Развлечения</option>
+                    <option value="2135">Рестораны</option>
+                    <option value="2126">СМИ</option>
+                    <option value="2130">Социальные и общественные организации</option>
+                    <option value="2144">Спорт</option>
+                    <option value="2132">Товары, магазины</option>
+                    <option value="2138">Транспортные услуги</option>
+                    <option value="2143">Туризм и отдых</option>
+                    <option value="2008">Увлечения и хобби</option>
+                    <option value="2141">Услуги связи</option>
+                    <option value="2142">Финансы и страхование</option>
+                    <option value="3268">Эротика</option>
+                </select>
+            </span>
+            <div class="posts">
+                <template x-for="(post, idx) in posts">
+                    <div class="post_wrapper">
+                        <div class="post_enum" x-text="`${idx + 1}. `"></div>
+                        <div class="post">
+                            <div class="post_header">
+                                <a :href="generatePostUrl(post.owner_id, post.post_id)"
+                                    x-text="generatePostTitle(post.author_name, post.content)"></a>
+                            </div>
+                            <div class="post_meta">
+                                <span class="posted_at">posted at <span x-text="post.created_at"></span></span>
+                                <span class="likes">[<i class="fa-solid fa-heart"></i> <span
+                                        x-text="post.likes"></span>]</span>
+                                <span class="shares">[<i class="fa-solid fa-share"></i> <span
+                                        x-text="post.reposts"></span>]</span>
+                                <span class="views">[<i class="fa-solid fa-eye"></i> <span
+                                        x-text="post.views"></span>]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </template>
+            </div>
+        </main>
     </div>
 </body>
 <style>
+    #container {
+        min-width: 800px;
+        width: 75%;
+        margin: 0 auto;
+        font-size: 12pt;
+    }
+
+    @media only screen and (min-width: 300px) and (max-width: 750px) {
+        #container {
+            width: 100%;
+            min-width: 0;
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+    }
+
+    header {
+        height: 20px;
+        line-height: 20px;
+        padding-left: 10px;
+        background-color: #00ADB5;
+    }
+
+    header span i {
+        font-size: 8pt;
+    }
+
+    header span a:link {
+        text-decoration: none;
+        color: #222831;
+    }
+
+    header span a:hover {
+        color: #ffffff;
+    }
+
+    main {
+        background-color: #EEEEEE;
+        color: #222831;
+        margin-top: 5px;
+    }
+
     .options {
+        margin-left: 5px;
+        margin-top: 5px;
+    }
+
+    .posts {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        margin-top: 5px;
     }
-    #posts {
+
+    .post_wrapper {
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        margin-left: 5px;
     }
-    #posts > div.vk_post {
-        margin-top: 10px;
-        margin-bottom: 10px;
+
+    .post_enum {
+        width: 35px;
+    }
+
+    .post_header a:link {
+        color: #222831;
+        text-decoration: none;
+    }
+
+    .post_meta {
+        color: #737880;
+        font-size: 10pt;
+    }
+
+    .post_meta i {
+        font-size: 8pt;
     }
 </style>
+
 </html>
